@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  tickets   Ticket[]
+}
+
+model Ticket {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fromName    String
+  fromEmail   String
+  subject     String
+  body        String
+  receivedAt  DateTime
+  status      String    @default("open") // open | snoozed | resolved
+  priority    String?   // urgent | high | normal | low
+  category    String?   // billing | bug | account | feature | refund | other
+  sentiment   String?   // angry | neutral | happy
+  summary     String?
+  draftReply  String?
+  triageSource String?  // claude | rules
+  triagedAt   DateTime?
+  replies     Reply[]
+  createdAt   DateTime  @default(now())
+
+  @@index([workspaceId, status])
+}
+
+model Reply {
+  id       String   @id @default(cuid())
+  ticketId String
+  ticket   Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  body     String
+  sentAt   DateTime @default(now())
+}
